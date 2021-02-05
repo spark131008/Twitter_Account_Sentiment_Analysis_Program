@@ -1,0 +1,3 @@
+sbt package && 
+docker cp ./target/scala-2.12/spark_streaming_2.12-1.0.jar spark-master:/spark_streaming.jar && 
+docker exec spark-master bash -c "./spark/bin/spark-submit --class "SparkStreaming" --master local[4] /spark_streaming.jar"

@@ -1,0 +1,3 @@
+sbt package && 
+docker cp ./target/scala-2.12/filtered_twitter_stream_2.12-1.0.jar spark-master:/filtered_twitter_stream.jar && 
+docker exec spark-master bash -c "./spark/bin/spark-submit --class "TwitterStreamingDataProcessing" --master local[4] /filtered_twitter_stream.jar"
