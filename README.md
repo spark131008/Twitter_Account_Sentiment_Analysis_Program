@@ -38,7 +38,7 @@ In order to create a jar file of each program, use the command below:
 ```
 sbt package
 ```
-Once all jar files are created, copy the files located within /target/scala-2.12 directory and paste it to JVM or a local cluster. If you are running your cluster in a Docker container, use the command below:
+Once all jar files are created, copy the files located within /target/scala-2.12 directory and paste them to JVM or a local cluster. If you are running your cluster in a Docker container, use the command below:
 ```
 docker cp ./target/scala-2.12/<Name of the jar file>.jar spark-master:/<Name of the jar file>.jar
 ```
