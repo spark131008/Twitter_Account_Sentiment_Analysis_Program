@@ -18,18 +18,17 @@ import scala.collection.mutable.Map
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.log4j._
-import org.json.JSONArray
-import org.json.JSONObject
+
 
 
 object TwitterStreamingDataProcessing {
 
   def main(args: Array[String]): Unit = {
-    var bearerToken: String = ""
+    var bearerToken: String = "AAAAAAAAAAAAAAAAAAAAABwjLwEAAAAAmKwfSHgPu1hd0BLNHyMAJW%2FlYRM%3DVONcD8xJw8Jg2z41n9wnU4Ea0GqG798AkmkoWKtiN2RnJIkApZ"
 
     if (bearerToken != null) {
       var rules = Map[String, String]()
-      rules("from:McDonalds") =  "McDonalds account"
+      rules("BTS") =  "all with BTS"
 
       setupRules(bearerToken, rules)
       tweetStreamToDir(bearerToken)
@@ -57,7 +56,7 @@ object TwitterStreamingDataProcessing {
         val reader = new BufferedReader(new InputStreamReader(entity.getContent))
         var fileWriter = new PrintWriter(Paths.get("tweetstream.tmp").toFile)
         var (lineNumber, line) = (1, reader.readLine())
-        val (linesPerFile, milliseconds) = (10, System.currentTimeMillis())
+        val (linesPerFile, milliseconds) = (1000, System.currentTimeMillis())
         while (line != null) {
           if (lineNumber % linesPerFile == 0) {
             fileWriter.close()
@@ -76,17 +75,22 @@ object TwitterStreamingDataProcessing {
   }
 
   def setupRules(bearerToken: String, rules: Map[String, String]) {
-    //var existingRules = getRules(bearerToken)
-    // if (existingRules.size > 0) {
-    //   deleteRules(bearerToken, existingRules)
-    // }
+    var existingRules = getRules(bearerToken)
+    if (existingRules.size > 0) {
+      deleteRules(bearerToken, existingRules)
+    }
 
-    // var existingRules = List("")
-    // deleteRules(bearerToken, existingRules)
     createRules(bearerToken, rules)
   }
 
   def getRules(bearerToken: String): List[String] = {
+    Logger.getLogger("org").setLevel(Level.ERROR)
+
+    val spark = SparkSession.builder()
+       .appName("TwitterStream")
+       .master("local[4]")
+       .getOrCreate()
+
     var rules = ArrayBuffer[String]()
     val httpClient = HttpClients.custom.setDefaultRequestConfig(
       RequestConfig.custom.setCookieSpec(CookieSpecs.STANDARD).build
@@ -101,18 +105,24 @@ object TwitterStreamingDataProcessing {
     val response = httpClient.execute(httpGet)
     val entity = response.getEntity()
 
+    import spark.implicits._
     if (entity != null) {
       val reader = new BufferedReader(new InputStreamReader(entity.getContent))
+      var fileWriter = new PrintWriter(Paths.get("existingrule.json").toFile)
       val line = reader.readLine()
-      println(line)
-      // if (json.length > 1) {
-      //   var array = new JSONArray(json.get("data"))
-      //   for (i <- 0 until array.length) {
-      //     var jsonObject = array.getJSONObject(i)
-      //     rules += jsonObject.getString("id")
-      //   }
-      // }
-    }
+      fileWriter.println(line)
+      fileWriter.close()
+      val jsonDF = spark.read.json("/existingrule.json").cache()
+      val columnCheck = List("data", "meta")
+
+      if(columnCheck.forall(jsonDF.columns.contains)){
+        val existingRuleDF = jsonDF.select(explode(col("data.id").as("id")))
+        val ruleToList = existingRuleDF.collect().map(_(0)).toList
+        for(i <- ruleToList){
+          rules += i.toString  
+        }
+      }
+    } 
     return rules.toList
   }
 

@@ -13,20 +13,19 @@ object SparkStreaming {
     Logger.getLogger("org").setLevel(Level.ERROR)
 
     val spark = SparkSession.builder()
-       .appName("TwitterDemo2")
+       .appName("spark_streaming")
        .master("local[4]")
        .getOrCreate()
 
     import spark.implicits._
 
-    val schemaDF = spark.read.json("/tweetstream.tmp")
+    val schemaDF = spark.read.json("/datalake1/tweetstream-1")
     val streamDF = spark
         .readStream
         .schema(schemaDF.schema)
         .json("/datalake1")
 
     val tweetDF = streamDF.select(split(col("data.text"), "\\W+").as("text"))
-    val countDF = tweetDF.groupBy($"text").count()
     
     val block_sz = 1024
     val streamQuery = tweetDF

@@ -48,7 +48,7 @@ object SentimentAnalysis{
         //Read a text file and convert it into Dataframe
         val sentimentLexicon = spark.read
             .option("inferSchema", "true")
-            .textFile("/datalake/Subjectivity_Lexicon.txt").cache()
+            .textFile("/Subjectivity_Lexicon.txt").cache()
 
         val lexiconToArray = sentimentLexicon.collectAsList.toArray
         var mappingWordAndSentiment = ListBuffer[Map[String, String]]()
