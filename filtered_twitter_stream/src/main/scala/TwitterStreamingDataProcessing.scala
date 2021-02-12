@@ -28,7 +28,7 @@ object TwitterStreamingDataProcessing {
 
     if (bearerToken != null) {
       var rules = Map[String, String]()
-      rules("BTS") =  "all with BTS"
+      rules("from:McDonalds") =  "McDonalds account"
 
       setupRules(bearerToken, rules)
       tweetStreamToDir(bearerToken)
@@ -56,7 +56,7 @@ object TwitterStreamingDataProcessing {
         val reader = new BufferedReader(new InputStreamReader(entity.getContent))
         var fileWriter = new PrintWriter(Paths.get("tweetstream.tmp").toFile)
         var (lineNumber, line) = (1, reader.readLine())
-        val (linesPerFile, milliseconds) = (1000, System.currentTimeMillis())
+        val (linesPerFile, milliseconds) = (10, System.currentTimeMillis())
         while (line != null) {
           if (lineNumber % linesPerFile == 0) {
             fileWriter.close()
